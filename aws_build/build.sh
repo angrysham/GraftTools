@@ -12,7 +12,11 @@ mkcd(){
 mkcd /home/ubuntu/release1
 
 cmake /usr/src/graft-ng
-make -j 4
+make -j$((`nproc`+1))
+
+if [[ ! -d "${DEB_BUILD_DIR}" ]]; then
+  mkdir ${DEB_BUILD_DIR}
+fi
 
 mkdir -p ${DEB_BUILD_DIR}/usr/bin
 mkdir -p ${DEB_BUILD_DIR}/DEBIAN
