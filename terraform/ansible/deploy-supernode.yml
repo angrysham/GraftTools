@@ -1,0 +1,9 @@
+---
+- hosts: all
+  gather_facts: True
+
+- hosts: "tag_Role_supernode"
+  gather_facts: False
+  become: yes
+  roles:
+    - deploy_supernode

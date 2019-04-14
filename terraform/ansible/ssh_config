@@ -1,0 +1,21 @@
+Host 10.0.1.*
+  User ubuntu
+  IdentityFile ../sandbox1/staging_key
+  ProxyJump 54.89.205.206  # SSH >=7.3 needed
+  StrictHostKeyChecking no
+  #ProxyCommand ssh -W %h:%p ubuntu@52.91.246.141
+  #ForwardAgent yes
+  
+Host 10.0.2.*
+  User ubuntu
+  IdentityFile ../sandbox1/staging_key
+  ProxyJump 54.89.205.206  # SSH >=7.3 needed
+  StrictHostKeyChecking no
+Host 54.89.205.206
+  User ubuntu
+  StrictHostKeyChecking no
+  #ForwardAgent yes
+  IdentityFile ../sandbox1/staging_key
+  ControlMaster auto
+  ControlPath ~/ansible-%r@%h:%p
+  ControlPersist 30m

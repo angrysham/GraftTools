@@ -1,0 +1,13 @@
+---
+sshd_configs:
+  - { regexp: "^Protocol.*",                               line: "Protocol 2"                             }
+  - { regexp: "^#?PermitRootLogin.*",                      line: "PermitRootLogin without-password"       }
+  - { regexp: "^#?PubkeyAuthentication.*",                 line: "PubkeyAuthentication yes"               }
+  - { regexp: "^#?ChallengeResponseAuthentication.*",      line: "ChallengeResponseAuthentication no"     }
+  - { regexp: "^#?PasswordAuthentication.*",               line: "PasswordAuthentication yes"             }
+  - { regexp: "^#?MaxAuthTries.*",                         line: "MaxAuthTries 10"                        }
+  - { regexp: "^#?HostKey /etc/ssh/ssh_host_ed25519_key$", line: "#HostKey /etc/ssh/ssh_host_ed25519_key" }
+
+sshd_port: 22
+
+ssh_keys: { }

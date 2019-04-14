@@ -1,0 +1,11 @@
+---
+nginx_sites:
+  - "web-test"
+  - "status"
+
+web_test_root: "/opt/web-test"
+
+telegraf:
+  service_list:
+    - "00common.conf"
+    - "nginx.conf"

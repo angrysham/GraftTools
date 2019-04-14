@@ -1,0 +1,66 @@
+---
+- name: Wrk | Pre-Configure | Check if installed
+  stat:
+    path: "/usr/local/bin/wrk"
+  register: p
+
+- name: Wrk | Preconfigure | Print stat results
+  debug:
+    var: p
+    verbosity: 2
+
+- name: Wrk | Install | Install if missing
+  block:
+    - name: Wrk | Pre-Configure | Install additional packages
+      apt:
+        pkg:   "{{ item }}"
+        state: present
+      with_items:
+        - "build-essential"
+        - "libssl-dev"
+        - "git"
+
+    - name: Wrk | Pre-Configure | Create temporary directory to store sources
+      tempfile:
+        suffix: "wrk"
+        state:  directory
+      register: wrk_tmp
+
+    - name: Wrk | Pre-Configure | Set temporary directory name in variable
+      set_fact:
+        wrk_tmp_dir:      "{{ wrk_tmp.path }}"
+
+    - name: Wrk | Install | Download and unarchive source tarball
+      git:
+        repo:    "https://github.com/wg/wrk.git"
+        dest:    "{{ wrk_tmp_dir }}"
+        version: "master"
+
+    - name: Wrk | Install | Make it
+      make:
+        chdir: "{{ wrk_tmp_dir }}"
+
+    - name: Wrk | Install | Copy compiled binary
+      copy:
+        src:        "{{ wrk_tmp_dir }}/wrk"
+        dest:       "/usr/local/bin"
+        mode:       "0755"
+        remote_src: yes
+
+    - name: Wrk | Install | Remove sources directory
+      file:
+        dest:  "{{ wrk_tmp_dir }}"
+        state: absent
+  when:
+    - "p.stat.exists is not defined or not p.stat.exists"
+
+- name: Wrk | Configure | Generate systemd script
+  template:
+    src:   "templates/systemd.j2"
+    dest:  "/lib/systemd/system/wrk.service"
+    owner: "root"
+    group: "root"
+    mode:  "0644"
+    force: yes
+  notify:
+    - restart wrk

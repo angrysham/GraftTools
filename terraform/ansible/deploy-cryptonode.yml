@@ -1,0 +1,9 @@
+---
+- hosts: all
+  gather_facts: True
+
+- hosts: "tag_Role_cryptonode"
+  gather_facts: True
+  become: yes
+  roles:
+    - deploy_cryptonode

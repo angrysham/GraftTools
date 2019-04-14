@@ -1,0 +1,38 @@
+---
+- name: restart fail2ban
+  service:
+    name:  "fail2ban"
+    state: restarted
+
+- name: restart sshd
+  service:
+    name:  "ssh"
+    state: restarted
+
+- name: restart ntp
+  service:
+    name:  "ntp"
+    state: restarted
+
+- name: restart apt-daily.timer
+  systemd:
+    name:          "apt-daily.timer"
+    state:         restarted
+    daemon_reload: yes
+
+- name: restart apt-daily-upgrade.timer
+  systemd:
+    name:          "apt-daily-upgrade.timer"
+    state:         restarted
+    daemon_reload: yes
+
+- name: disable systemd-timesyncd
+  systemd:
+    name:    "systemd-timesyncd"
+    state:   stopped
+    enabled: False
+
+- name: restart rsyslog
+  systemd:
+    name:  "rsyslog"
+    state: restarted

@@ -1,0 +1,8 @@
+# Documentation:
+#   https://www.freedesktop.org/software/systemd/man/systemd.timer.html
+[Timer]
+OnCalendar=
+OnCalendar=01:{{ '%02d' % 59 | random(seed=inventory_hostname) }}
+RandomizedDelaySec=0
+AccuracySec=1us
+Persistent=false

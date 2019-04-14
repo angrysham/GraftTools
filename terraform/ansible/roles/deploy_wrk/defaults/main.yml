@@ -1,0 +1,3 @@
+---
+wrk: "{{ wrk | default({}) }}"
+wrk_host_value: "{{ wrk[ansible_hostname] | default('127.0.0.1') }}"

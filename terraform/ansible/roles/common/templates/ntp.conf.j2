@@ -1,0 +1,35 @@
+# /etc/ntp.conf, configuration for ntpd; see ntp.conf(5) for help
+
+# File name to record the frequency offset of the local clock oscillator.
+driftfile /var/lib/ntp/ntp.drift
+
+# NTP Servers
+# Stratum 1
+# http://support.ntp.org/bin/view/Servers/PublicTimeServer001317
+server time.esa.int			iburst
+# http://support.ntp.org/bin/view/Servers/PublicTimeServer001260
+server time.t3kkit.com			iburst
+
+# Stratum 2
+# http://support.ntp.org/bin/view/Servers/PublicTimeServer001181
+server ntp0.borg-collective.org.uk	iburst
+# http://support.ntp.org/bin/view/Servers/PublicTimeServer000611
+server ntp.wsrs.net			iburst
+# http://support.ntp.org/bin/view/Servers/PublicTimeServer000531
+server ntp.richs.nl			iburst
+
+# Access control configuration: /usr/share/doc/ntp-doc/html/accopt.html
+# By default, exchange time with everybody, but don't allow configuration.
+restrict -4 default kod notrap nomodify nopeer noquery limited
+#restrict -6 default kod notrap nomodify nopeer noquery limited
+
+# Local users may interrogate the ntp server more closely.
+restrict 127.0.0.1
+#restrict ::1
+
+# Control which network addresses ntpd opens, and whether input is dropped
+# without processing.
+interface ignore wildcard
+interface listen 127.0.0.1
+#interface listen ::1
+interface listen {{ elastic_ip | default(ansible_default_ipv4.address) }}

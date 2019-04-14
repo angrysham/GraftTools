@@ -1,0 +1,1 @@
+^\w{3} [ :0-9]{11} [._[:alnum:]-]+ systemd-tmpfiles\[[0-9]+\]: \[/usr/lib/tmpfiles.d/var.conf:[0-9]+\] Duplicate line for path "/var/log", ignoring\.$

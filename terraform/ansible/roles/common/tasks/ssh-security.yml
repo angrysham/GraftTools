@@ -1,0 +1,46 @@
+---
+- name: SSH Security | fail2ban | Install | Ensure package is installed
+  apt:
+    pkg:   "fail2ban"
+    state: present
+
+- name: SSH Security | fail2ban | Configure | Fix missing SSH rule in actions
+  copy:
+    src:   "fail2ban/filter-sshd.conf"
+    dest:  "/etc/fail2ban/filter.d/sshd.conf"
+    owner: "root"
+    group: "root"
+    mode:  "0644"
+    force: yes
+
+- name: SSH Security | fail2ban | Configure | Copy local jail configuration
+  template:
+    src:   "{{ item.src }}"
+    dest:  "{{ item.dest }}"
+    owner: "root"
+    group: "root"
+    mode:  "0644"
+    force: yes
+  with_items:
+    - { src: "fail2ban/jail.local.j2",          dest: "/etc/fail2ban/jail.local" }
+    - { src: "fail2ban/action-ufw-ssh.conf.j2", dest: "/etc/fail2ban/action.d/ufw-ssh.conf" }
+  notify:
+    - restart fail2ban
+
+- name: SSH Security | SSH keys | Install | Copy keys
+  authorized_key:
+    user: "{{ ansible_user }}"
+    key:  "{{ lookup('file', item) }}"
+  with_items:
+    - "{{ ssh_keys }}"
+  when: ssh_keys | length > 0
+
+- name: SSH Security | SSHD | Configure | Use more aggressive settings
+  lineinfile:
+    dest:   "/etc/ssh/sshd_config"
+    regexp: "{{ item.regexp }}"
+    line:   "{{ item.line }}"
+  with_items:
+    - "{{ sshd_configs }}"
+  notify:
+    - restart sshd

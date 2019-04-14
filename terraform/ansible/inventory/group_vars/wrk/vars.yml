@@ -1,0 +1,4 @@
+---
+wrk:
+  c1-wrk: "{{ hostvars['c1-web']['ansible_default_ipv4']['address'] }}"
+  c2-wrk: "{{ hostvars['c2-web']['ansible_default_ipv4']['address'] }}"

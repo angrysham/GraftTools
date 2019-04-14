@@ -1,0 +1,6 @@
+---
+- hosts: infra
+  roles:
+    - influxdb
+    - grafana
+    - nginx

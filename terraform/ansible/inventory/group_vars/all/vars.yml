@@ -1,0 +1,6 @@
+---
+timezone: Europe/Amsterdam
+
+telegraf:
+  service_list:
+    - "00common.conf"

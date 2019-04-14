@@ -1,0 +1,228 @@
+---
+- name: Common | APT | Do dist-upgrade
+  apt:
+    upgrade:          dist
+    update_cache:     yes
+    cache_valid_time: 3600
+    dpkg_options:     "force-confold,force-confdef"
+  tags:
+    - common
+
+- name: Common | APT | Install basic packages
+  apt:
+    pkg:   "{{ item }}"
+    state: present
+  with_items:
+    - "apt-transport-https"
+    - "curl"
+    - "dnsutils"
+    - "fail2ban"
+    - "gawk"
+    - "gzip"
+    - "htop"
+    - "jq"
+    - "lynx"
+    - "ntp"
+    - "ntp-doc"
+    - "python-pip"
+    - "telnet"
+    - "tzdata"
+    - "unattended-upgrades"
+    - "unzip"
+    - "vim"
+    - "wget"
+    - "zsh"
+  tags:
+    - common
+    - packages
+
+- name: Common | APT upgrades | Adjust unattended-upgrades intervals and settings
+  template:
+    src:   "templates/{{ item }}.j2"
+    dest:  "/etc/apt/apt.conf.d/{{ item }}"
+    force: yes
+  with_items:
+    - "20auto-upgrades"
+    - "50unattended-upgrades"
+  tags:
+    - common
+    - security
+    - upgrades
+
+- name: Common | APT upgrades | Make unattended-upgrades run between 0100 - 0200 | Create systemd override directories
+  file:
+    path:  "{{ item }}"
+    owner: "root"
+    group: "root"
+    mode:  "0755"
+    state: directory
+  with_items:
+    - "/etc/systemd/system/apt-daily.timer.d/"
+    - "/etc/systemd/system/apt-daily-upgrade.timer.d/"
+  tags:
+    - common
+    - security
+    - upgrades
+
+- name: Common | APT upgrades | Make unattended-upgrades run between 0100 - 0200 | Create systemd override files
+  template:
+    src:   "{{ item.src }}"
+    dest:  "{{ item.dest }}"
+    owner: "root"
+    group: "root"
+    mode:  "0644"
+    force: yes
+  with_items:
+    - { src: "templates/apt-daily-timer-d-override.conf.j2",         dest: "/etc/systemd/system/apt-daily.timer.d/override.conf"         }
+    - { src: "templates/apt-daily-upgrade-timer-d-override.conf.j2", dest: "/etc/systemd/system/apt-daily-upgrade.timer.d/override.conf" }
+  notify:
+    - restart apt-daily.timer
+    - restart apt-daily-upgrade.timer
+  tags:
+    - common
+    - security
+    - upgrades
+
+- name: Common | Time and Date | Set timezone
+  timezone:
+    name: "{{ timezone }}"
+  tags:
+    - common
+    - timezone
+
+- name: Common | Date and Time | Generate ntpd configuration
+  template:
+    src:   "templates/ntp.conf.j2"
+    dest:  "/etc/ntp.conf"
+    owner: "root"
+    group: "root"
+    mode:  "0644"
+    force: yes
+  notify:
+    - restart ntp
+    - disable systemd-timesyncd
+  tags:
+    - common
+    - ntp
+
+- name: Common | Date and Time | Listen on IPv4 addresses only
+  lineinfile:
+    path:     "/etc/default/ntp"
+    regexp:   "^NTPD_OPTS='(((?!-4).)*)'"
+    line:     "NTPD_OPTS='\\1 -4'"
+    backrefs: yes
+  notify:
+    - restart ntp
+  tags:
+    - common
+    - ntp
+
+- name: Common | Networking | Remove domain from hostname
+  lineinfile:
+    dest:   "/etc/hostname"
+    regexp: "^{{ ansible_hostname }}.*"
+    line:   "{{ ansible_hostname }}"
+  tags:
+    - common
+    - hosts
+
+- name: Common | Networking | Set new hostname
+  hostname:
+    name: "{{ ansible_hostname }}"
+  tags:
+    - common
+    - hosts
+
+- name: Common | Networking | Change 127.0.0.1 to be localhost and external IP to be hostname
+  lineinfile:
+    dest:        "/etc/hosts"
+    regexp:      "{{ item.regexp }}"
+    line:        "{{ item.line }}"
+    insertafter: "{{ item.ia | default(omit) }}"
+  with_items:
+    - { regexp: '^127\.0\.0\.1\s+localhost.*$',                 line: '127.0.0.1 localhost' }
+    - { regexp: '^#?{{ elastic_ip | default(ansible_default_ipv4.address) | quote }}.*$', line: '{{ elastic_ip | default(ansible_default_ipv4.address) }} {{ ansible_hostname }} {{ ansible_hostname }}.tradecloud1.com' , ia: '^127\.0\.0\.1.*$'}
+  tags:
+    - common
+    - hosts
+
+- name: Common | sysctl | Add reasonable values
+  sysctl:
+    name:   "{{ item.name  }}"
+    value:  "{{ item.value }}"
+    state:  present
+    reload: yes
+  with_items:
+    # Set vm.swappiness to 1
+    - { name: "vm.swappiness", value: "1" }
+  tags:
+    - common
+    - sysctl
+
+# Address https://bugs.launchpad.net/ubuntu/+source/rsyslog/+bug/1531622
+- name: Common | Rsyslog | Address Ubuntu bug '#1531622'
+  lineinfile:
+    dest:   "/etc/rsyslog.conf"
+    regexp: "{{ item.regexp }}"
+    line:   "{{ item.line }}"
+  with_items:
+    - { regexp: '^module\(load\="imklog".*$',          line: 'module(load="imklog" permitnonkernelfacility="on") # provides kernel logging support' }
+    - { regexp: '^#?.KLogPermitNonKernelFacility on$', line: '#$KLogPermitNonKernelFacility on'                                                     }
+  notify:
+    - restart rsyslog
+  tags:
+    - common
+    - rsyslog
+    - syslog
+
+- name: Common | Rsyslog | Additional configuration
+  lineinfile:
+    dest:        "/etc/rsyslog.conf"
+    regexp:      "{{ item.regexp }}"
+    line:        "{{ item.line }}"
+    insertafter: "{{ item.insertafter | default(omit) }}"
+    firstmatch:  "{{ 'true' if item.inserafter is defined else 'false' }}"
+  with_items:
+    - { regexp: '^module\(load\="imfile"\).*$', line: 'module(load="imfile")   # if you want to tail files', insertafter: '^#?module\(load\="immark"\).*$' }
+  notify:
+    - restart rsyslog
+  tags:
+    - common
+    - rsyslog
+    - syslog
+
+# Address https://bugs.launchpad.net/ubuntu/+source/rsyslog/+bug/459730
+# and use slightly better defaults
+- name: Common | Rsyslog | Copy configuration to '/etc/rsyslog.d'
+  copy:
+    src:   "files/rsyslog/{{ item }}"
+    dest:  "/etc/rsyslog.d/{{ item }}"
+    owner: "root"
+    group: "root"
+    mode:  "0644"
+    force: yes
+  with_items:
+    - "50-default.conf"
+  notify:
+    - restart rsyslog
+  tags:
+    - common
+    - rsyslog
+    - syslog
+
+# Address https://bugs.launchpad.net/ubuntu/+source/rsyslog/+bug/1484027
+- name: Common | Rsyslog | Copy logcheck ignores to '/etc/logcheck/ignore.d.server'
+  copy:
+    src:   "files/logcheck/{{ item }}"
+    dest:  "/etc/logcheck/ignore.d.server/{{ item }}"
+    owner: "root"
+    group: "root"
+    mode:  "0644"
+    force: yes
+  with_items:
+    - "systemd-tmpfiles"
+  tags:
+    - common
+    - rsyslog
+    - syslog
+    - logcheck

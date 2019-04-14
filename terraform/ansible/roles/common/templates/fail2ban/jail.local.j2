@@ -1,0 +1,12 @@
+[ssh]
+enabled   = true
+port      = {{ sshd_port }}
+filter    = sshd
+logpath   = /var/log/auth.log
+maxretry  = 5
+ignoreip  = 127.0.0.1/8{% if fail2ban_whitelist is defined %}{% for host in fail2ban_whitelist %} {{ host }}{% endfor %}{% endif %}
+
+findtime  = 300
+bantime   = 21600
+banaction = ufw-ssh
+action   = hostsdeny[file=/etc/hosts.deny]

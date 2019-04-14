@@ -1,0 +1,8 @@
+terraform {
+  backend "s3" {
+    bucket = "terraform-state-bucket-graft"
+    key    = "state"
+    region = "us-east-1"
+  }
+}
+

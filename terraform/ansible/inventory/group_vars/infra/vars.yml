@@ -1,0 +1,15 @@
+---
+grafana_configs:
+  - { regexp: "protocol =",      line: "protocol = http"       }
+  - { regexp: "http_addr =",     line: "http_addr = 127.0.0.1" }
+  - { regexp: "allow_sign_up =", line: "allow_sign_up = false" }
+  - { regexp: "login_hint =",    line: "login_hint = Username" }
+
+nginx_sites:
+  - "status"
+  - "grafana"
+
+telegraf:
+  service_list:
+    - "00common.conf"
+    - "nginx.conf"

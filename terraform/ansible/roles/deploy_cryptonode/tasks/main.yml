@@ -1,0 +1,18 @@
+---
+#- name: Run the equivalent of "apt-get update" as a separate step
+#  apt:
+#    update_cache: yes
+- name: Install a list of packages
+  apt:
+    name: "{{ packages }}"
+  vars:
+    packages:
+    - graft-blockchain-tools
+    - graft-wallet
+    - graftnoded
+    - libgraft-dev
+    - libgraft0
+- name: Run graftnoded
+  shell: "(cd /; graftnoded --testnet --net-id=54686520-4172-7420-6f77-205761722037 --detach >/dev/null 2>&1 &)"
+  async: 10
+  poll: 0

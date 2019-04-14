@@ -1,0 +1,11 @@
+[Unit]
+Description=wrk
+Wants=network-online.target
+After=network-online.target
+ConditionPathExists=/usr/local/bin/wrk
+
+[Service]
+User=%I
+Restart=always
+RestartSec=60s
+ExecStart=/usr/local/bin/wrk -t10 -c10 -d10s "http://{{ wrk_host_value }}"

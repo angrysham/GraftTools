@@ -1,0 +1,19 @@
+---
+- name: Run the equivalent of "apt-get update" as a separate step
+  apt:
+    update_cache: yes
+- name: Install a list of packages
+  apt:
+    name: "{{ packages }}"
+  vars:
+    packages:
+    - graft-supernode
+    - graft-blockchain-tools
+    - graft-wallet
+    - graftnoded
+    - libgraft-dev
+    - libgraft0
+- name: Run supernode
+  shell: "(cd /; nohup /usr/bin/graft-supernode --log-file /tmp/supernode &>/dev/null &)"
+  async: 10
+  poll: 0

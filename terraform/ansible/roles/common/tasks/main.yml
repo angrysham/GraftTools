@@ -1,0 +1,6 @@
+---
+- include: base.yml
+- include: ssh-security.yml
+  tags:
+    - ssh
+    - common
