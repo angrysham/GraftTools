@@ -58,14 +58,11 @@ After=network.target
 [Service]
 User=graft
 Group=graft
-WorkingDirectory=~
-
-Type=forking
-PIDFile=/var/run/graft.pid
-KillMode=process
-Restart=on-failure
-
-ExecStart=/opt/graft/graftnoded --config-file /etc/graftnoded.conf --detach --pidfile /var/run/graftnoded.pid
+WorkingDirectory=/opt/graft
+Type=oneshot
+RemainAfterExit=yes
+RestartSec=1
+ExecStart=/opt/graft/graftnoded --config-file /etc/graftnoded.conf --detach --pidfile /tmp/graftnoded.pid
 
 [Install]
 WantedBy=multi-user.target
