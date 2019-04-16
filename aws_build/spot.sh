@@ -1,19 +1,5 @@
 #!/bin/bash
 
-case $1 in
-
-  create)
-	create_spot
-;;
-
-  terminate)
- 	terminate_spot	
-;;
-
-*)
-  echo "Usage $0 [32mcreate[0m|[31mterminate[0m"
-
-esac
 
 create_spot(){
 
@@ -224,6 +210,22 @@ aws ec2 request-spot-fleet --spot-fleet-request-config file://spot_fleet.json | 
 
 }
 
-terminate_stop(){
-aws ec2 describe-spot-fleet-requests |grep active |awk -F ' ' '{print $4}'| xargs -I '$' aws ec2 cancel-spot-fleet-requests --spot-fleet-request-ids '$' --terminate-instances
+terminate_spot(){
+aws ec2 describe-spot-fleet-requests --output=text |grep active |awk -F ' ' '{print $3}'| xargs -I '$' aws ec2 cancel-spot-fleet-requests --spot-fleet-request-ids '$' --terminate-instances
 }
+
+
+case $1 in
+
+  create)
+	create_spot
+;;
+
+  terminate)
+ 	terminate_spot	
+;;
+
+*)
+  echo "Usage $0 [32mcreate[0m|[31mterminate[0m"
+
+esac
