@@ -1,5 +1,6 @@
 #!/bin/bash
 set -x
+
 GRAFTNODED_DEB_BUILD_DIR="/home/ubuntu/graftnoded"
 SUPERGRAFT_DEB_BUILD_DIR="/home/ubuntu/supergraft"
 USERNAME="graft"
@@ -84,6 +85,7 @@ adduser -q --system --home /opt/graft --no-create-home --ingroup ${USERNAME} --d
 systemctl daemon-reload
 chown -R graft:graft /opt/graft
 EOF
+
 chmod 755 ${GRAFTNODED_DEB_BUILD_DIR}/DEBIAN/postinst
 
 cd ${GRAFTNODED_DEB_BUILD_DIR}
@@ -99,6 +101,7 @@ fi
 
 mkdir -p ${SUPERGRAFT_DEB_BUILD_DIR}/opt/graft/supernode.d
 mkdir -p ${SUPERGRAFT_DEB_BUILD_DIR}/etc/graft
+mkdir -p ${SUPERGRAFT_DEB_BUILD_DIR}/etc/systemd/system
 mkdir -p ${SUPERGRAFT_DEB_BUILD_DIR}/DEBIAN
 
 cp /home/ubuntu/release1/supernode  ${SUPERGRAFT_DEB_BUILD_DIR}/opt/graft
@@ -127,10 +130,9 @@ Description: LEGACY SUPERGRAFT PACKAGE
 EOF
 
 
-cat << EOF > ${GRAFTNODED_DEB_BUILD_DIR}/etc/systemd/system/graft-supernode-legacy.service
-
+cat << EOF > ${SUPERGRAFT_DEB_BUILD_DIR}/etc/systemd/system/graft-supernode-legacy.service
 [Unit]
-Description=Graftnoded Service
+Description=Supergraft Service
 After=network.target
 
 [Service]
@@ -138,23 +140,23 @@ User=graft
 Group=graft
 WorkingDirectory=/opt/graft
 
-Type=forking
-PIDFile=/var/run/supernode.pid
+Type=oneshot
+PIDFile=/tmp/supernode.pid
 KillMode=process
-Restart=on-failure
 
-ExecStart=/opt/graft/supernode --config-file /etc/graft/supernode-config.ini --detach 
+ExecStart=/opt/graft/supernode --config-file /etc/graft/supernode-config.ini 
 
 [Install]
 WantedBy=multi-user.target
+EOF
 
-cat << EOF > ${GRAFTNODED_DEB_BUILD_DIR}/DEBIAN/postinst
+cat << EOF > ${SUPERGRAFT_DEB_BUILD_DIR}/DEBIAN/postinst
 systemctl daemon-reload
 chown -R graft:graft /opt/graft/supernode
 chown -R graft:graft /etc/graft
 EOF
 
-chmod 755 ${GRAFTNODED_DEB_BUILD_DIR}/DEBIAN/postinst
+chmod 755 ${SUPERGRAFT_DEB_BUILD_DIR}/DEBIAN/postinst
 
 cd ${SUPERGRAFT_DEB_BUILD_DIR}
 dpkg-deb -b ./ ../
@@ -164,4 +166,4 @@ dpkg-deb -b ./ ../
 
 #make_graftnoded_pkg
 
-#make_supergraft_pkg
+make_supergraft_pkg

@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash 
 
 
 create_spot(){
@@ -214,18 +214,38 @@ terminate_spot(){
 aws ec2 describe-spot-fleet-requests --output=text |grep active |awk -F ' ' '{print $3}'| xargs -I '$' aws ec2 cancel-spot-fleet-requests --spot-fleet-request-ids '$' --terminate-instances
 }
 
+if [ -z  "$AWS_ACCESS_KEY_ID" ]; then
+       	echo -e "Envoronment AWS_ACCESS_KEY_ID hasn't been defined. Please export it to continue..." 
+	echo -e "\nFollowing Environment variables are mandatory and should be defined: \n\t AWS_ACCESS_KEY_ID & AWS_SECRET_ACCESS_KEY \n\t export AWS_ACCESS_KEY_ID=XXXXXXXXXXXXX \n\t export AWS_SECRET_ACCESS_KEY=YYYYYYYYYYY"
+	exit 1 
+fi
+
+if [ -z "$AWS_SECRET_ACCESS_KEY" ]; then
+      	echo -e "Envoronment AWS_SECRET_ACCESS_KEY hasn't been defined. Please export it to continue..." 
+       	exit 1
+fi
 
 case $1 in
 
   create)
 	create_spot
-;;
+	;;
+
+  status)
+	aws ec2 describe-spot-fleet-requests --output=text |grep active |wc -l
+	;;
 
   terminate)
  	terminate_spot	
-;;
+	;;
+  
+  modify_json)
+	SNAP_ID=`aws ec2 describe-images --image-ids $2 --output=text | grep snap | awk -F ' ' '{print $4}'`
+        echo ${SNAP_ID}
+	sed  's/${AMI_ID}/'$2'/g; s/${SNAPSHOT_ID}/'$SNAP_ID'/g' spot_fleet_template.json > spot_fleet.json
+	;;
 
 *)
-  echo "Usage $0 [32mcreate[0m|[31mterminate[0m"
-
+  echo "Usage $0 [32mcreate[0m|[31mterminate[0m| modify_json AMI_ID"
 esac
+
