@@ -232,7 +232,7 @@ case $1 in
 	;;
 
   status)
-	aws ec2 describe-spot-fleet-requests --output=text |grep active |wc -l
+	  echo "You have active: $(aws ec2 describe-spot-fleet-requests --output=text |grep active |wc -l) spot requests"
 	;;
 
   terminate)
@@ -246,6 +246,6 @@ case $1 in
 	;;
 
 *)
-  echo "Usage $0 [32mcreate[0m|[31mterminate[0m| modify_json AMI_ID"
+  echo -e "Usage $0 [32mcreate[0m|[31mterminate[0m| status|  modify_json AMI_ID\n\t create -- create spot request\n\t terminate -- terminate active spot request"
 esac
 

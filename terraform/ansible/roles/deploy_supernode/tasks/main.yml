@@ -8,12 +8,7 @@
   vars:
     packages:
     - graft-supernode
-    - graft-blockchain-tools
-    - graft-wallet
-    - graftnoded
-    - libgraft-dev
-    - libgraft0
 - name: Run supernode
-  shell: "(cd /; nohup /usr/bin/graft-supernode --log-file /tmp/supernode &>/dev/null &)"
+  shell: "(GRAFTNET=`grep GRAFT_NETWORK /etc/default/graft | awk -F'=' '{print $2}'` && perl -pi -e  's/wallet-public-address=/wallet-public-address='${GRAFTNET}'/g' /etc/graft/supernode-config.ini)"
   async: 10
   poll: 0

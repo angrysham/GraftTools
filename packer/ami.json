@@ -1,0 +1,39 @@
+{
+    "variables": {
+        "aws_access_key": "{{env AWS_ACCESS_KEY_ID}}",
+        "aws_secret_key": "{{env AWS_SECRET_ACCESS_KEY}}",
+        "region":         "us-east-1"
+    },
+    "builders": [
+        {
+            "access_key": "{{user `aws_access_key`}}",
+            "ami_name": "packer-aws-ubuntu-18.04-{{timestamp}}",
+            "instance_type": "t2.micro",
+            "region": "us-east-1",
+            "secret_key": "{{user `aws_secret_key`}}",
+            "source_ami_filter": {
+              "filters": {
+              "virtualization-type": "hvm",
+              "name": "ubuntu/images/hvm-ssd/ubuntu-bionic-18.04-amd64-server-*",
+              "root-device-type": "ebs"
+              },
+              "owners": ["099720109477"],
+              "most_recent": true
+            },
+            "ssh_username": "ubuntu",
+            "type": "amazon-ebs"
+        }
+    ],
+    "provisioners": [{
+    "type": "shell",
+    "inline": [
+      "sleep 30",
+      "sudo ucf --purge /boot/grub/menu.lst",
+      "sudo apt-get update",
+      "sudo DEBIAN_FRONTEND=noninteractive UCF_FORCE_CONFFNEW=YES apt-get -yq upgrade", 
+      "sudo DEBIAN_FRONTEND=noninteractive apt-get install -y build-essential cmake  pkg-config  libboost-all-dev libunbound-dev libminiupnpc-dev libunwind8-dev liblzma-dev  libldns-dev libexpat1-dev doxygen graphviz",
+      "sudo apt-get -y install libssl-dev libreadline-dev debhelper check rapidjson-dev openjdk-11-jdk",
+      "sudo apt-get install -y libgtest-dev && cd /usr/src/gtest && sudo cmake . && sudo make && sudo mv libg* /usr/lib/"
+    ]
+  }]
+}

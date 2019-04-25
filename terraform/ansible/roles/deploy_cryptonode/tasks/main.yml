@@ -7,12 +7,9 @@
     name: "{{ packages }}"
   vars:
     packages:
-    - graft-blockchain-tools
-    - graft-wallet
-    - graftnoded
-    - libgraft-dev
-    - libgraft0
-- name: Run graftnoded
-  shell: "(cd /; graftnoded --testnet --net-id=54686520-4172-7420-6f77-205761722037 --detach >/dev/null 2>&1 &)"
-  async: 10
-  poll: 0
+    - graftnode
+- name: Run graftnode
+  service: 
+    name: graftnode 
+    state: started
+

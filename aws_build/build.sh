@@ -1,37 +1,38 @@
 #!/bin/bash
-set -x
 
-GRAFTNODED_DEB_BUILD_DIR="/home/ubuntu/graftnoded"
-SUPERGRAFT_DEB_BUILD_DIR="/home/ubuntu/supergraft"
+GRAFTNODE_DEB_BUILD_DIR="/home/ubuntu/graftnoded"
+SUPERNODE_DEB_BUILD_DIR="/home/ubuntu/supernode"
 USERNAME="graft"
+GROUP="graft"
+PRJ_SOURCE=$HOME/graft
+RELEASE_FOLDER="$HOME/release1"
+GLOBAL_CONFIG="/etc/default/graft"
 
 mkcd(){
   mkdir $1 && cd $1
 }
 
 make_build(){
-cd /usr/src/
-git clone --recursive https://github.com/graft-project/graft-ng.git
-
-
-mkcd /home/ubuntu/release1
-
-cmake /usr/src/graft-ng
-make -j$((`nproc`+1))
+        [ ! -d "${PRJ_SOURCE}" ] && echo "Creating folder for prj source" && mkdir ${PRJ_SOURCE}
+	cd ${PRJ_SOURCE}
+	git clone --recursive https://github.com/graft-project/graft-ng.git
+	mkcd ${RELEASE_FOLDER}
+	cmake ${PRJ_SOURCE}/graft-ng
+	make -j$((`nproc`+1))
 }
 
-make_graftnoded_pkg(){
+make_graftnode_pkg(){
 
-if [[ ! -d "${GRAFTNODED_DEB_BUILD_DIR}" ]]; then
-  mkdir ${GRAFTNODED_DEB_BUILD_DIR}
+if [[ ! -d "${GRAFTNODE_DEB_BUILD_DIR}" ]]; then
+  mkdir ${GRAFTNODE_DEB_BUILD_DIR}
 fi
 
-mkdir -p ${GRAFTNODED_DEB_BUILD_DIR}/opt/graft
-mkdir -p ${GRAFTNODED_DEB_BUILD_DIR}/etc/systemd/system
-mkdir -p ${GRAFTNODED_DEB_BUILD_DIR}/DEBIAN
-cp /home/ubuntu/release1/BUILD/cryptonode/bin/{graft-supernode,graft-blockchain-export,graft-blockchain-import,graft-wallet-cli,graft-wallet-rpc,graftnoded} ${GRAFTNODED_DEB_BUILD_DIR}/opt/graft/
+mkdir -p ${GRAFTNODE_DEB_BUILD_DIR}/opt/graft
+mkdir -p ${GRAFTNODE_DEB_BUILD_DIR}/etc/systemd/system
+mkdir -p ${GRAFTNODE_DEB_BUILD_DIR}/DEBIAN
+cp ${RELEASE_FOLDER}/BUILD/cryptonode/bin/{graft-supernode,graft-blockchain-export,graft-blockchain-import,graft-wallet-cli,graft-wallet-rpc,graftnoded} ${GRAFTNODE_DEB_BUILD_DIR}/opt/graft/
 
-cat << EOF > ${GRAFTNODED_DEB_BUILD_DIR}/DEBIAN/control
+cat << EOF > ${GRAFTNODE_DEB_BUILD_DIR}/DEBIAN/control
 
 Source: ng-graft
 Section: net
@@ -42,15 +43,15 @@ Standards-Version: 4.1.2
 Homepage: <www.graft.network>
 #Vcs-Git: https://anonscm.debian.org/git/collab-maint/ng-graft.git
 #Vcs-Browser: https://anonscm.debian.org/cgit/collab-maint/ng-graft.git
-Package: graftnoded
-Version: 1.0.2
+Package: graftnode
+Version: 1.0.3
 Architecture: amd64
 #Recommends: 
 #Suggests: 
-Description: LEGACY GRAFTNODED PACKAGE
+Description: LEGACY GRAFTNODE PACKAGE
 EOF
 
-cat << EOF > ${GRAFTNODED_DEB_BUILD_DIR}/etc/systemd/system/graftnoded.service
+cat << EOF > ${GRAFTNODE_DEB_BUILD_DIR}/etc/systemd/system/graftnode.service
 
 [Unit]
 Description=Graftnoded Service
@@ -63,53 +64,61 @@ WorkingDirectory=/opt/graft
 Type=oneshot
 RemainAfterExit=yes
 RestartSec=1
-ExecStart=/opt/graft/graftnoded --config-file /etc/graftnoded.conf --detach --pidfile /tmp/graftnoded.pid
+ExecStart=/opt/graft/graftnoded --config-file /etc/graftnode.conf --detach --pidfile /tmp/graftnoded.pid
 
 [Install]
 WantedBy=multi-user.target
 EOF
 
-cat << EOF > ${GRAFTNODED_DEB_BUILD_DIR}/etc/graft.conf
-# Configuration for graftnoded
-# Syntax: any command line option may be specified as 'clioptionname=value'.
-# See 'graftnoded --help' for all available options.
+cat << EOF > ${GRAFTNODE_DEB_BUILD_DIR}/etc/graftnode.conf
+  # Configuration for graftnoded
+  # Syntax: any command line option may be specified as 'clioptionname=value'.
+  # See 'graftnode --help' for all available options.
 
-data-dir=/var/lib/graft
-log-file=/var/log/graft/graftnoded.log
-log-level=0
+  data-dir=/var/lib/graft
+  log-file=/var/log/graft/graftnode.log
+  log-level=0
 EOF
 
-cat << EOF > ${GRAFTNODED_DEB_BUILD_DIR}/DEBIAN/postinst
-addgroup -q --system ${USERNAME}
-adduser -q --system --home /opt/graft --no-create-home --ingroup ${USERNAME} --disabled-login ${USERNAME}
-systemctl daemon-reload
-chown -R graft:graft /opt/graft
+cat << EOF > ${GRAFTNODE_DEB_BUILD_DIR}/DEBIAN/postinst
+  addgroup -q --system ${GROUP}
+  adduser -q --system --home /opt/graft --no-create-home --ingroup ${USERNAME} --disabled-login ${USERNAME}
+  systemctl daemon-reload
+  chown -R ${USERNAME}:${GROUP} /opt/graft
+  systemctl enable graftnode
+  systemctl start graftnode
 EOF
 
-chmod 755 ${GRAFTNODED_DEB_BUILD_DIR}/DEBIAN/postinst
+cat<< EOF > ${GRAFTNODE_DEB_BUILD_DIR}/DEBIAN/postrm
+ systemctl stop graftnode
+ systemctl daemon-reload
+EOF
 
-cd ${GRAFTNODED_DEB_BUILD_DIR}
+chmod 755 ${GRAFTNODE_DEB_BUILD_DIR}/DEBIAN/postinst
+chmod 755 ${GRAFTNODE_DEB_BUILD_DIR}/DEBIAN/postrm
+
+cd ${GRAFTNODE_DEB_BUILD_DIR}
 dpkg-deb -b ./ ../
 }
 
 
-make_supergraft_pkg(){
+make_supernode_pkg(){
 
-if [[ ! -d "${SUPERGRAFT_DEB_BUILD_DIR}" ]]; then
-  mkdir ${SUPERGRAFT_DEB_BUILD_DIR}
+if [[ ! -d "${SUPERNODE_DEB_BUILD_DIR}" ]]; then
+  mkdir ${SUPERNODE_DEB_BUILD_DIR}
 fi
 
-mkdir -p ${SUPERGRAFT_DEB_BUILD_DIR}/opt/graft/supernode.d
-mkdir -p ${SUPERGRAFT_DEB_BUILD_DIR}/etc/graft
-mkdir -p ${SUPERGRAFT_DEB_BUILD_DIR}/etc/systemd/system
-mkdir -p ${SUPERGRAFT_DEB_BUILD_DIR}/DEBIAN
+mkdir -p ${SUPERNODE_DEB_BUILD_DIR}/opt/graft/supernode.d
+mkdir -p ${SUPERNODE_DEB_BUILD_DIR}/etc/graft
+mkdir -p ${SUPERNODE_DEB_BUILD_DIR}/etc/systemd/system
+mkdir -p ${SUPERNODE_DEB_BUILD_DIR}/DEBIAN
 
-cp /home/ubuntu/release1/supernode  ${SUPERGRAFT_DEB_BUILD_DIR}/opt/graft
-cp /home/ubuntu/release1/config.ini  ${SUPERGRAFT_DEB_BUILD_DIR}/etc/graft/supernode-config.ini
+cp /home/ubuntu/release1/supernode  ${SUPERNODE_DEB_BUILD_DIR}/opt/graft
+cp /home/ubuntu/release1/config.ini  ${SUPERNODE_DEB_BUILD_DIR}/etc/graft/supernode-config.ini
 
-cp  /home/ubuntu/release1/graftlets/supernode/libgraftlet_walletAddress.so ${SUPERGRAFT_DEB_BUILD_DIR}/opt/graft/supernode.d/
+cp  /home/ubuntu/release1/graftlets/supernode/libgraftlet_walletAddress.so ${SUPERNODE_DEB_BUILD_DIR}/opt/graft/supernode.d/
 
-cat << EOF > ${SUPERGRAFT_DEB_BUILD_DIR}/DEBIAN/control
+cat << EOF > ${SUPERNODE_DEB_BUILD_DIR}/DEBIAN/control
 
 Source: ng-graft
 Section: net
@@ -120,20 +129,20 @@ Standards-Version: 4.1.2
 Homepage: <www.graft.network>
 #Vcs-Git: https://anonscm.debian.org/git/collab-maint/ng-graft.git
 #Vcs-Browser: https://anonscm.debian.org/cgit/collab-maint/ng-graft.git
-Package: supergraft
-Depends: graftnoded
-Version: 1.0.2
+Package: graft-supernode
+Depends: graftnode
+Version: 1.0.3
 Architecture: amd64
 #Recommends: 
 #Suggests: 
-Description: LEGACY SUPERGRAFT PACKAGE
+Description: LEGACY SUPERNODE PACKAGE
 EOF
 
 
-cat << EOF > ${SUPERGRAFT_DEB_BUILD_DIR}/etc/systemd/system/graft-supernode-legacy.service
+cat << EOF > ${SUPERNODE_DEB_BUILD_DIR}/etc/systemd/system/graft-supernode-legacy.service
 [Unit]
 Description=Supergraft Service
-After=network.target
+After=network.target graftnode.service
 
 [Service]
 User=graft
@@ -144,26 +153,35 @@ Type=oneshot
 PIDFile=/tmp/supernode.pid
 KillMode=process
 
-ExecStart=/opt/graft/supernode --config-file /etc/graft/supernode-config.ini 
+ExecStart=/opt/graft/supernode --config-file /etc/graft/supernode-config.ini  
 
 [Install]
 WantedBy=multi-user.target
 EOF
 
-cat << EOF > ${SUPERGRAFT_DEB_BUILD_DIR}/DEBIAN/postinst
+cat << EOF > ${SUPERNODE_DEB_BUILD_DIR}/DEBIAN/postinst
+
+if [ -f ${GLOBAL_CONFIG} ]; then
+  GRAFTNET=`grep GRAFT_NETWORK ${GLOBAL_CONFIG} | awk -F'=' '{print $2}'`
+fi
+
+perl -pi -e  's/wallet-public-address=/wallet-public-address='${GRAFTNET}'/g' /etc/graft/supernode-config.ini 
 systemctl daemon-reload
-chown -R graft:graft /opt/graft/supernode
-chown -R graft:graft /etc/graft
+chown -R ${USERNAME}:${GROUP} /opt/graft/supernode
+chown -R ${USERNAME}:${GROUP} /etc/graft
 EOF
 
-chmod 755 ${SUPERGRAFT_DEB_BUILD_DIR}/DEBIAN/postinst
+chmod 755 ${SUPERNODE_DEB_BUILD_DIR}/DEBIAN/postinst
 
-cd ${SUPERGRAFT_DEB_BUILD_DIR}
+cd ${SUPERNODE_DEB_BUILD_DIR}
 dpkg-deb -b ./ ../
+
 }
 
 #make_build
 
-#make_graftnoded_pkg
+#make_graftnode_pkg
 
-make_supergraft_pkg
+make_supernode_pkg
+
+echo -e  "Usage $0 make_build | make_graftnode_pkg | make_supernode_pkg \n\t make_build --- performs project compilation \n\t make_graftnode_pkg --- performs graftnode package build \n\t make_supernode_pkg --- performs supernode package build"
