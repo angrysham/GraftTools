@@ -1,5 +1,5 @@
 #!/bin/bash
-set -x
+set -e
 
 GRAFTNODE_DEB_BUILD_DIR="/home/ubuntu/graftnoded"
 SUPERNODE_DEB_BUILD_DIR="/home/ubuntu/supernode"
@@ -8,6 +8,7 @@ GROUP="graft"
 PRJ_SOURCE=$HOME/graft
 RELEASE_FOLDER="$HOME/release1"
 GLOBAL_CONFIG="/etc/default/graft"
+DEFAULT_NETWORK="mainnet"
 
 make_supernode_pkg(){
 
@@ -17,6 +18,7 @@ fi
 
 mkdir -p ${SUPERNODE_DEB_BUILD_DIR}/opt/graft/supernode.d
 mkdir -p ${SUPERNODE_DEB_BUILD_DIR}/etc/graft
+mkdir -p ${SUPERNODE_DEB_BUILD_DIR}/etc/default
 mkdir -p ${SUPERNODE_DEB_BUILD_DIR}/etc/systemd/system
 mkdir -p ${SUPERNODE_DEB_BUILD_DIR}/DEBIAN
 
@@ -38,7 +40,7 @@ Homepage: <www.graft.network>
 #Vcs-Browser: https://anonscm.debian.org/cgit/collab-maint/ng-graft.git
 Package: graft-supernode
 Depends: graftnode
-Version: 1.0.4
+Version: 1.0.7
 Architecture: amd64
 #Recommends: 
 #Suggests: 
@@ -56,11 +58,11 @@ User=graft
 Group=graft
 WorkingDirectory=/opt/graft
 
-Type=oneshot
+Type=simple
 PIDFile=/tmp/supernode.pid
 KillMode=process
 
-ExecStart=/opt/graft/supernode --config-file /etc/graft/supernode-config.ini  
+ExecStart=/opt/graft/supernode --config-file /etc/graft/supernode-config.ini
 
 [Install]
 WantedBy=multi-user.target
@@ -69,19 +71,36 @@ EOF
 cat << EOF > ${SUPERNODE_DEB_BUILD_DIR}/DEBIAN/postinst
 
 #!/bin/bash
+
+set -e
 set -x
+
 if [ -f ${GLOBAL_CONFIG} ]; then
-	export PARAM=$(cat ${GLOBAL_CONFIG}| awk -F'=' '{print $2}')
-	echo ${PARAM}
+	GRAFT_NETWORK="$(cat ${GLOBAL_CONFIG}| grep GRAFT_NETWORK |  awk -F'=' '{print $2}')"
+	sed -i -e 's/wallet-public-address=/wallet-public-address=\${GRAFT_NETWORK}/g' /etc/graft/supernode-config.ini
+	sed -i -e 's/:\/var\/opt/:\/opt\/graft\/supernode.d/g' /etc/graft/supernode-config.ini
 fi
 
-sed -i  "s/wallet-public-address=/wallet-public-address=${PARAM}/g" /etc/graft/supernode-config.ini 
-systemctl daemon-reload
 chown -R ${USERNAME}:${GROUP} /opt/graft/supernode
 chown -R ${USERNAME}:${GROUP} /etc/graft
+systemctl daemon-reload
+systemctl enable graft-supernode-legacy
+systemctl start graft-supernode-legacy
+EOF
+
+cat << EOF > ${SUPERNODE_DEB_BUILD_DIR}/etc/default/graft
+GRAFT_NETWORK=\${DEFAULT_NETWORK}
+EOF
+
+cat << EOF > ${SUPERNODE_DEB_BUILD_DIR}/DEBIAN/postrm
+#!/bin/bash
+systemctl stop graft-supernode-legacy
+systemctl disable graft-supernode-legacy
+systemctl daemon-reload
 EOF
 
 chmod 755 ${SUPERNODE_DEB_BUILD_DIR}/DEBIAN/postinst
+chmod 755 ${SUPERNODE_DEB_BUILD_DIR}/DEBIAN/postrm
 
 cd ${SUPERNODE_DEB_BUILD_DIR}
 
