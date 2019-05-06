@@ -1,20 +1,6 @@
-# GraftTools
+# Graft tools
+## Folders and files
 
-### Preparation
-
-It's recommended to configure AWS CLI to use scripts provided here. Once one have API key & secret perform following step:
-
-```sh 
-$ aws configure
-```
-
-### Building debian package
-
-The First Step:
-```sh 
-$ ./spot.sh create 
-```
-The Second Step:
-```sh
-$ ./runRemote.sh
-```
+### [`aws_build`] -- Scripts to manage GraftProject Build using AWS infrastructure.
+### [`packer`] -- Configuration to register custom AMI using packer.
+### [`terraform`] -- Set of files to provision Graft network using terraform and debpoy latest versions of Debian packages from *APT* repo
