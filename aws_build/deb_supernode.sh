@@ -1,5 +1,4 @@
 #!/bin/bash
-set -e
 
 GRAFTNODE_DEB_BUILD_DIR="/home/ubuntu/graftnoded"
 SUPERNODE_DEB_BUILD_DIR="/home/ubuntu/supernode"
@@ -40,7 +39,7 @@ Homepage: <www.graft.network>
 #Vcs-Browser: https://anonscm.debian.org/cgit/collab-maint/ng-graft.git
 Package: graft-supernode
 Depends: graftnode
-Version: 1.0.7
+Version: 1.0.8
 Architecture: amd64
 #Recommends: 
 #Suggests: 
@@ -48,7 +47,7 @@ Description: LEGACY SUPERNODE PACKAGE
 EOF
 
 
-cat << EOF > ${SUPERNODE_DEB_BUILD_DIR}/etc/systemd/system/graft-supernode-legacy.service
+cat << EOF > ${SUPERNODE_DEB_BUILD_DIR}/etc/systemd/system/graft-supernode.service
 [Unit]
 Description=Supergraft Service
 After=network.target graftnode.service
@@ -72,9 +71,6 @@ cat << EOF > ${SUPERNODE_DEB_BUILD_DIR}/DEBIAN/postinst
 
 #!/bin/bash
 
-set -e
-set -x
-
 if [ -f ${GLOBAL_CONFIG} ]; then
 	GRAFT_NETWORK="$(cat ${GLOBAL_CONFIG}| grep GRAFT_NETWORK |  awk -F'=' '{print $2}')"
 	sed -i -e 's/wallet-public-address=/wallet-public-address=\${GRAFT_NETWORK}/g' /etc/graft/supernode-config.ini
@@ -84,8 +80,8 @@ fi
 chown -R ${USERNAME}:${GROUP} /opt/graft/supernode
 chown -R ${USERNAME}:${GROUP} /etc/graft
 systemctl daemon-reload
-systemctl enable graft-supernode-legacy
-systemctl start graft-supernode-legacy
+systemctl enable graft-supernode
+systemctl start graft-supernode
 EOF
 
 cat << EOF > ${SUPERNODE_DEB_BUILD_DIR}/etc/default/graft
@@ -94,8 +90,8 @@ EOF
 
 cat << EOF > ${SUPERNODE_DEB_BUILD_DIR}/DEBIAN/postrm
 #!/bin/bash
-systemctl stop graft-supernode-legacy
-systemctl disable graft-supernode-legacy
+systemctl stop graft-supernod
+systemctl disable graft-supernode
 systemctl daemon-reload
 EOF
 

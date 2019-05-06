@@ -31,13 +31,31 @@ Homepage: <www.graft.network>
 #Vcs-Git: https://anonscm.debian.org/git/collab-maint/ng-graft.git
 #Vcs-Browser: https://anonscm.debian.org/cgit/collab-maint/ng-graft.git
 Package: graftnode
-Version: 1.0.7
+Version: 1.0.8
 Architecture: amd64
 #Recommends: 
 #Suggests: 
 Description: LEGACY GRAFTNODE PACKAGE
 EOF
 
+cat << EOF > ${GRAFTNODE_DEB_BUILD_DIR}/etc/systemd/system/graft-supernode-legacy.service
+
+[Unit]
+Description=Graftnoded Service
+After=network.target
+
+[Service]
+User=graft
+Group=graft
+WorkingDirectory=/opt/graft
+Type=oneshot
+RemainAfterExit=yes
+RestartSec=1
+ExecStart=/opt/graft/graft-supernode
+
+[Install]
+WantedBy=multi-user.target
+EOF
 cat << EOF > ${GRAFTNODE_DEB_BUILD_DIR}/etc/systemd/system/graftnode.service
 
 [Unit]
