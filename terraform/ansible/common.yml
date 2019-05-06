@@ -1,31 +1,14 @@
 ---
 - hosts: all
-  gather_facts: False
-  any_errors_fatal: True
-  become: yes
-  roles:
-  - raw_python2
-    #- deploy_cryptonode
-    #- deploy_supernode
+  become: true
+  gather_facts: false
+  pre_tasks:
+  - name: Install python2 for Ansible
+    raw: bash -c "test -e /usr/bin/python || (apt -qqy update && apt install -qqy python-minimal)"
+    register: output
+    changed_when: output.stdout != ""
   tasks:
-  #- name: install python 2
-  #  raw: test -e /usr/bin/python || (apt -y update && apt install -y python-minimal)
-  - name: add key
-    apt_key:
-      keyserver: keyserver.ubuntu.com
-      id: 8115759C7E79E08D
-  # Add specified repository into sources list using specified filename.
-  - name: add repo
-    apt_repository:
-      repo: deb http://ec2-34-201-29-117.compute-1.amazonaws.com:8081/repository/bionic/  bionic main
-      update_cache: no
-      state: present
-      filename: graft-ansible
-  #  - name: Run the equivalent of "apt-get update" as a separate step
-  #  apt:
-  #   update_cache: yes
-
-  - name: Only run "update_cache=yes" if the last one is more than 3600 seconds ago
-    apt:
-     update_cache: yes
-     cache_valid_time: 3600
+  # Gather facts about any instance with a tag key Name and value Example
+  - ec2_instance_facts:
+    filters:
+      "tag:Role": cryptonode
