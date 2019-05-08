@@ -47,6 +47,8 @@ case $1 in
 	;;
 	*)
 		echo  "Usage: $0 provision |  reprovision | deploy | redeploy | destroy | status"
+		echo -e "Usage $0 [32mprovision[0m|[32mreprovision[0m| \n\t provison -- create Infrustrusture for graft network\n\t reprovision -- update infrastrucure after changes made to project files"
+		echo -e "Usage $0 [32mdeploy[0m|[32mredeploy[0m| status| deploy\n\t deploy -- install graftnode and/or graft-supernode packages depending on ec2_Tag \n\t redeploy -- reinstall\\upgrade graftnode and/or graft-supernode packages depending on ec2_Tag"
 		
 	;;
 esac
