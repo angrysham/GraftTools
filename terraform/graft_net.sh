@@ -8,13 +8,14 @@ case $1 in
  		cd sandbox1 && terraform init && terraform plan && terraform apply 
 	;;
 	deploy)
-		cd ansible && source env.sh 
+		cd ansible && source env_vars.sh
+		./update_ssh_config.sh
 	        echo "Installing Python2..."       
 		ansible-playbook -i ./ec2.py common.yml
-	        echo "Deploying graftnode package to  Role: cryptonode hosts..."       
-		ansible-playbook -i ./ec2.py deploy_cryptonode.yml
-	        echo "Deploying graftnode package to  Role: supernode hosts..."       
-		ansible-playbook -i ./ec2.py deploy_supernode.yml
+	        echo "Deploying graftnode package to Role: cryptonode hosts..."       
+		ansible-playbook -i ./ec2.py deploy-cryptonode.yml
+	        echo "Deploying graftnode package to Role: supernode hosts..."       
+		ansible-playbook -i ./ec2.py deploy-supernode.yml
 	;;
 	redeploy)
 		cd ansible && source env.sh && ansible-playbook -i ./ec2.py common.yml
@@ -26,8 +27,12 @@ case $1 in
 		cd ansible && source env.sh 
 		ansible -i ec2.py us-east-1a -m ping
 	;;
+	status) 
+		cd ansible && source env_vars.sh
+		ansible-playbook -i ./ec2.py service.yml
+	;;
 	*)
-		echo  "Usage: $0 provision |  reprovision | deploy | redeploy | destroy"
+		echo  "Usage: $0 provision |  reprovision | deploy | redeploy | destroy | status"
 		
 	;;
 esac

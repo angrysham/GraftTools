@@ -1,15 +1,41 @@
 ---
-- name: Run the equivalent of "apt-get update" as a separate step
+- name: add key
+  apt_key:
+    keyserver: keyserver.ubuntu.com
+    id: 8115759C7E79E08D
+  # Add specified repository into sources list using specified filename.
+- name: add repo
+  apt_repository:
+    repo: deb http://ec2-34-201-29-117.compute-1.amazonaws.com:8081/repository/ubuntu/  bionic main
+    update_cache: yes
+    state: present
+
+- name: Only run "update_cache=yes" if the last one is more than 3600 seconds ago
   apt:
     update_cache: yes
+    cache_valid_time: 120
+
 - name: Install a list of packages
   apt:
     name: "{{ packages }}"
+    state: latest
   vars:
     packages:
-    - graftnode 
     - graft-supernode
-- name: Run supernode
-  shell: "(GRAFTNET=`grep GRAFT_NETWORK /etc/default/graft | awk -F'=' '{print $2}'` && perl -pi -e  's/wallet-public-address=/wallet-public-address='${GRAFTNET}'/g' /etc/graft/supernode-config.ini)"
-  async: 10
-  poll: 0
+    - graftnode
+
+- name: "Check if supernode package is installed"
+  package_facts:
+    manager: "auto"
+
+- name: "Supernode pkg status"
+  debug:
+    msg: "Supernode pkg found"
+  when: "'graft-supernode' in ansible_facts.packages"
+
+- name: "Check supernode service enabled and started"
+  service:
+    name: graft-supernode-legacy
+    enabled: yes
+    state: started
+

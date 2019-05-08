@@ -1,4 +1,5 @@
 #!/bin/bash
+set -e
 
 GRAFTNODE_DEB_BUILD_DIR="/home/ubuntu/graftnoded"
 SUPERNODE_DEB_BUILD_DIR="/home/ubuntu/supernode"
@@ -39,7 +40,7 @@ Homepage: <www.graft.network>
 #Vcs-Browser: https://anonscm.debian.org/cgit/collab-maint/ng-graft.git
 Package: graft-supernode
 Depends: graftnode
-Version: 1.0.8
+Version: 1.0.9
 Architecture: amd64
 #Recommends: 
 #Suggests: 
@@ -68,7 +69,6 @@ WantedBy=multi-user.target
 EOF
 
 cat << EOF > ${SUPERNODE_DEB_BUILD_DIR}/DEBIAN/postinst
-
 #!/bin/bash
 
 if [ -f ${GLOBAL_CONFIG} ]; then

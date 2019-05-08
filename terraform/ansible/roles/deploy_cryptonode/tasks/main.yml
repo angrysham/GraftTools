@@ -2,14 +2,42 @@
 #- name: Run the equivalent of "apt-get update" as a separate step
 #  apt:
 #    update_cache: yes
+- name: add key
+  apt_key:
+    keyserver: keyserver.ubuntu.com
+    id: 8115759C7E79E08D
+  # Add specified repository into sources list using specified filename.
+- name: add repo
+  apt_repository:
+    repo: deb http://ec2-34-201-29-117.compute-1.amazonaws.com:8081/repository/ubuntu/  bionic main
+    update_cache: yes
+    state: present
+
+- name: Only run "update_cache=yes" if the last one is more than 3600 seconds ago
+  apt:
+    update_cache: yes
+    cache_valid_time: 120
+
+
 - name: Install a list of packages
   apt:
     name: "{{ packages }}"
+    state: latest
   vars:
     packages:
     - graftnode
-- name: Run graftnode
-  service: 
-    name: graftnode 
-    state: started
+
+- name: "Check if graftnode is installed"
+  package_facts:
+    manager: "auto"
+
+- name: "Graftnode status"
+  debug: 
+    msg: "Graftnode found"
+  when: "'graftnode' in ansible_facts.packages"
+
+- name: "Check graftnode service running and enabled"
+  service:
+    name: graftnode
+    enabled: yes
 

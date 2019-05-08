@@ -1,0 +1,19 @@
+Host 10.0.1.*
+  User ubuntu
+  IdentityFile ../sandbox1/staging_key
+  ProxyJump Proxy_var
+  StrictHostKeyChecking no
+  
+Host 10.0.2.*
+  User ubuntu
+  IdentityFile ../sandbox1/staging_key
+  ProxyJump Proxy_var
+  StrictHostKeyChecking no
+
+Host Proxy_var
+  User ubuntu
+  StrictHostKeyChecking no
+  IdentityFile ../sandbox1/staging_key
+  ControlMaster auto
+  ControlPath ~/ansible-%r@%h:%p
+  ControlPersist 30m
