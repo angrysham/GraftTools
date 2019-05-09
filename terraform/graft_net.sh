@@ -9,7 +9,7 @@ fi
 
 case $1 in
 	provision)
- 		cd sandbox1 && terraform init && terraform plan && terraform apply -auto-aprove
+ 		cd sandbox1 && terraform init && terraform plan && terraform apply -auto-approve
 	;;
 	reprovision)
  		cd sandbox1 && terraform init && terraform plan && terraform apply 

@@ -2,6 +2,14 @@ variable "environment" {
   default = "sandbox1"
 }
 
+variable "AWS_ACCESS_KEY_ID" {
+  description= "AWS Key"
+}
+
+variable "AWS_SECRET_ACCESS_KEY" {
+  description = "AWS Secret"
+}
+
 variable "key_name" {
   description = "The aws keypair to use"
 }
