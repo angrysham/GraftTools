@@ -35,11 +35,16 @@ case $1 in
 
 	;;
 	destroy)
-		cd sandbox1 && terraform destroy -auto-aprove
+		cd sandbox1 && terraform destroy
 	;;
 	ping)
 		cd ansible && source env_vars.sh 
-		ansible -i ec2.py us-east-1a -m ping
+		ansible -i ./ec2.py us-east-1a -m ping
+	;;
+        command)
+		cd ansible && source env_vars.sh 
+		ansible -i ./ec2.py us-east-1 -m command -a $2
+
 	;;
 	status) 
 		cd ansible && source env_vars.sh
@@ -48,7 +53,7 @@ case $1 in
 	*)
 		echo  "Usage: $0 provision |  reprovision | deploy | redeploy | destroy | status"
 		echo -e "Usage $0 [32mprovision[0m|[32mreprovision[0m| \n\t provison -- create Infrustrusture for graft network\n\t reprovision -- update infrastrucure after changes made to project files"
-		echo -e "Usage $0 [32mdeploy[0m|[32mredeploy[0m| status| deploy\n\t deploy -- install graftnode and/or graft-supernode packages depending on ec2_Tag \n\t redeploy -- reinstall\\upgrade graftnode and/or graft-supernode packages depending on ec2_Tag"
+		echo -e "Usage $0 [32mdeploy[0m|[32mredeploy[0m| status |[31m destroy[0m \n\t deploy -- install graftnode and/or graft-supernode packages depending on ec2_Tag \n\t redeploy -- reinstall\\upgrade graftnode and/or graft-supernode packages depending on ec2_Tag\n\t destroy -- destroy infrastrucure by terminating EC2 instances and resources used by sandbox environment"
 		
 	;;
 esac

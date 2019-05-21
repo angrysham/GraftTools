@@ -1,7 +1,6 @@
 #!/bin/bash
 
 GRAFTNODE_DEB_BUILD_DIR="/home/ubuntu/graftnoded"
-SUPERNODE_DEB_BUILD_DIR="/home/ubuntu/supernode"
 USERNAME="graft"
 GROUP="graft"
 PRJ_SOURCE=$HOME/graft
@@ -31,7 +30,7 @@ Homepage: <www.graft.network>
 #Vcs-Git: https://anonscm.debian.org/git/collab-maint/ng-graft.git
 #Vcs-Browser: https://anonscm.debian.org/cgit/collab-maint/ng-graft.git
 Package: graftnode
-Version: 1.0.8
+Version: 1.0.10
 Architecture: amd64
 #Recommends: 
 #Suggests: 
@@ -41,7 +40,7 @@ EOF
 cat << EOF > ${GRAFTNODE_DEB_BUILD_DIR}/etc/systemd/system/graft-supernode-legacy.service
 
 [Unit]
-Description=Graftnoded Service
+Description=Graftnode Service
 After=network.target
 
 [Service]
@@ -56,6 +55,7 @@ ExecStart=/opt/graft/graft-supernode
 [Install]
 WantedBy=multi-user.target
 EOF
+
 cat << EOF > ${GRAFTNODE_DEB_BUILD_DIR}/etc/systemd/system/graftnode.service
 
 [Unit]
@@ -76,22 +76,22 @@ WantedBy=multi-user.target
 EOF
 
 cat << EOF > ${GRAFTNODE_DEB_BUILD_DIR}/etc/graftnode.conf
-  # Configuration for graftnoded
-  # Syntax: any command line option may be specified as 'clioptionname=value'.
-  # See 'graftnode --help' for all available options.
+# Configuration for graftnoded
+# Syntax: any command line option may be specified as 'clioptionname=value'.
+# See 'graftnode --help' for all available options.
 
-  data-dir=/opt/graft
-  log-file=/var/log/graft/graftnode.log
-  log-level=0
+data-dir=/opt/graft
+log-file=/var/log/graft/graftnode.log
+log-level=0
 EOF
 
 cat << EOF > ${GRAFTNODE_DEB_BUILD_DIR}/DEBIAN/postinst
-  addgroup -q --system ${GROUP}
-  adduser -q --system --home /opt/graft --no-create-home --ingroup ${USERNAME} --disabled-login ${USERNAME}
-  systemctl daemon-reload
-  chown -R ${USERNAME}:${GROUP} /opt/graft
-  systemctl enable graftnode
-  systemctl start graftnode
+addgroup -q --system ${GROUP}
+adduser -q --system --home /opt/graft --no-create-home --ingroup ${USERNAME} --disabled-login ${USERNAME}
+systemctl daemon-reload
+chown -R ${USERNAME}:${GROUP} /opt/graft
+systemctl enable graftnode
+systemctl start graftnode
 EOF
 
 cat<< EOF > ${GRAFTNODE_DEB_BUILD_DIR}/DEBIAN/postrm
