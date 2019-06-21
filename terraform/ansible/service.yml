@@ -1,0 +1,14 @@
+---
+- hosts: "tag_Role_cryptonode"
+  become: yes
+  gather_facts: no
+  tasks:
+  - name: Gathering service facts
+    service_facts:
+    register: services_state
+
+  - name: Checking if graftnode service is up and running...
+    debug:
+      var: ansible_facts.services["graftnode.service"]
+      #  msg: "System {{ inventory_hostname }}"  
+
