@@ -21,12 +21,11 @@ The key features of Terraform are:
 
 For more information, see the [introduction section](http://www.terraform.io/intro) of the Terraform website.
 
-Getting Started & Documentation
--------------------------------
+ ## [`graft_net.sh`]
+Usage:  graft_net.sh provision |  reprovision | deploy | redeploy | destroy | status
+         provison -- create Infrustrusture for graft network
+         reprovision -- update infrastrucure after changes made to project files
+         deploy -- install graftnode and/or graft-supernode packages depending on ec2_Tag
+         redeploy -- reinstall\upgrade graftnode and/or graft-supernode packages depending on ec2_Tag
+         destroy -- destroy infrastrucure by terminating EC2 instances and resources used by sandbox environment
 
-If you're new to Terraform and want to get started creating infrastructure, please checkout our [Getting Started](https://www.terraform.io/intro/getting-started/install.html) guide, available on the [Terraform website](http://www.terraform.io).
-
-All documentation is available on the [Terraform website](http://www.terraform.io):
-
-  - [Intro](https://www.terraform.io/intro/index.html)
-  - [Docs](https://www.terraform.io/docs/index.html)
